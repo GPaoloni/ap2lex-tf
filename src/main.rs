@@ -11,6 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok((rest, parsed_resources)) => {
             println!("The rest is {:#?}", rest);
             println!("The parsed resources are {:#?}", parsed_resources);
+            parsed_resources.iter().for_each(|r| println!("{}", r.res_name));
             println!("The count of parsed resources is {}", parsed_resources.len());
         }
         Err(err) => println!("Parsing went wrong: {}", err),

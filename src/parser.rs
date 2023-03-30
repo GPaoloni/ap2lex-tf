@@ -5,10 +5,10 @@ use crate::{
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take_until, take_while},
-    character::complete::{char, multispace0},
+    character::complete::{anychar, char, multispace0},
     combinator::{cut, map, value},
-    error::ParseError,
-    multi::{many0, separated_list0},
+    error::{Error, ParseError},
+    multi::{many0, many1, separated_list0, separated_list1},
     sequence::{delimited, preceded, terminated, tuple},
     IResult,
 };
@@ -30,9 +30,9 @@ fn parse_resource_identifier(i: &str) -> IResult<&str, &str> {
 }
 
 fn parse_resource_property_key(i: &str) -> IResult<&str, String> {
-    let (i, k) = ws(take_while(|c| !(c == ' ' || c == '=')))(i)?;
-
-    Ok((i, k.to_string()))
+    map(ws(take_while(|c| !(c == ' ' || c == '='))), |s| {
+        s.to_string()
+    })(i)
 }
 
 // Parsers used for the value of a single resource property
@@ -93,16 +93,26 @@ fn parse_veach(i: &str) -> IResult<&str, &str> {
 }
 
 fn parse_vreference(i: &str) -> IResult<&str, (String, String)> {
-    // let (i, vreference) = ws(separated_list0(
-    ws(tuple((
-        take_until("."),
+    ws(separated_list1(
         char('.'),
-        take_until("."),
-        char('.'),
-        take_while(|c| !" \n".contains(c)),
-    )))(i)
-    .and_then(|(i, (res_type, _, res_name, _, _rest))| {
-        Ok((i, (res_type.to_string(), res_name.to_string())))
+        take_while(|c: char| c != '.' && !c.is_whitespace()),
+    ))(i)
+    .and_then(|(i, vec)| {
+        let ref_type: String = vec
+            .get(0)
+            .ok_or_else(|| {
+                nom::Err::Failure(Error::new("Ups", nom::error::ErrorKind::LengthValue))
+            })?
+            .to_string();
+
+        let ref_name: String = vec
+            .get(1)
+            .ok_or_else(|| {
+                nom::Err::Failure(Error::new("Ups", nom::error::ErrorKind::LengthValue))
+            })?
+            .to_string();
+
+        Ok((i, (ref_type, ref_name)))
     })
 }
 
@@ -112,11 +122,11 @@ fn parse_resource_property_value(i: &str) -> IResult<&str, ResourcePropertyValue
         map(parse_vset, ResourcePropertyValue::VSet),
         map(parse_vstring, ResourcePropertyValue::VString),
         map(parse_veach, |_| ResourcePropertyValue::VEach),
+        map(parse_vbool, ResourcePropertyValue::VBoolean),
+        map(parse_vnull, |_| ResourcePropertyValue::VNull),
         map(parse_vreference, |(res_type, res_name)| {
             ResourcePropertyValue::VReference { res_type, res_name }
         }),
-        map(parse_vbool, ResourcePropertyValue::VBoolean),
-        map(parse_vnull, |_| ResourcePropertyValue::VNull),
     ))(i)
 }
 
@@ -371,5 +381,27 @@ mod tests {
         let result = parse_resources(ap_resource).expect("Failed parsing the data");
 
         assert_eq!(result, ("", vec![expected]));
+    }
+
+    #[test]
+    fn parse_test() {
+        let ap_resource = "resource \"twilio_autopilot_assistants_tasks_v1\" \"development_pre_survey_redirect_function\" {
+            unique_name   = \"redirect_function\"
+            assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
+            actions = jsonencode({
+              \"actions\" : [
+                {
+                  \"redirect\" : {
+                    \"method\" : \"POST\",
+                    \"uri\" : \"https://serverless-9971-production.twil.io/autopilotRedirect\"
+                  }
+                }
+              ]
+            })
+          }";
+
+        let result = parse_resources(ap_resource).expect("Failed parsing the data");
+
+        println!("{:#?}", result);
     }
 }
