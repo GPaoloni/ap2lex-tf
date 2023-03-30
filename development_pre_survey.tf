@@ -51,7 +51,7 @@ resource "twilio_autopilot_assistants_v1" "development_pre_survey" {
   log_queries = true
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_redirect_function" {
+resource "twilio_autopilot_assistants_tasks_v1" "redirect_function" {
   unique_name   = "redirect_function"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -66,9 +66,9 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_redirect
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_survey" {
+resource "twilio_autopilot_assistants_tasks_v1" "survey" {
   unique_name   = "survey"
-  assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
+  assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid 
   actions = jsonencode({
     "actions" : [
       {
@@ -137,7 +137,7 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_survey" 
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_gender_why" {
+resource "twilio_autopilot_assistants_tasks_v1" "gender_why" {
   unique_name   = "gender_why"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -186,7 +186,7 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_gender_w
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_survey_start" {
+resource "twilio_autopilot_assistants_tasks_v1" "survey_start" {
   unique_name   = "survey_start"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -232,7 +232,7 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_survey_s
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_counselor_handoff" {
+resource "twilio_autopilot_assistants_tasks_v1" "counselor_handoff" {
   unique_name   = "counselor_handoff"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -250,7 +250,7 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_counselo
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_greeting" {
+resource "twilio_autopilot_assistants_tasks_v1" "greeting" {
   unique_name   = "greeting"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -278,7 +278,7 @@ resource "twilio_autopilot_assistants_tasks_samples_v1" "development_pre_survey_
   tagged_text   = each.key
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_collect_fallback" {
+resource "twilio_autopilot_assistants_tasks_v1" "collect_fallback" {
   unique_name   = "collect_fallback"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -293,7 +293,7 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_collect_
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_fallback" {
+resource "twilio_autopilot_assistants_tasks_v1" "fallback" {
   unique_name   = "fallback"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({
@@ -308,7 +308,7 @@ resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_fallback
   })
 }
 
-resource "twilio_autopilot_assistants_tasks_v1" "development_pre_survey_goodbye" {
+resource "twilio_autopilot_assistants_tasks_v1" "goodbye" {
   unique_name   = "goodbye"
   assistant_sid = twilio_autopilot_assistants_v1.development_pre_survey.sid
   actions = jsonencode({

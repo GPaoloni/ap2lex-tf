@@ -5,11 +5,11 @@ use crate::{
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take_until, take_while},
-    character::complete::{anychar, char, multispace0},
+    character::complete::{char, multispace0},
     combinator::{cut, map, value},
     error::{Error, ParseError},
-    multi::{many0, many1, separated_list0, separated_list1},
-    sequence::{delimited, preceded, terminated, tuple},
+    multi::{many0, separated_list0, separated_list1},
+    sequence::{delimited, preceded, separated_pair, terminated, tuple},
     IResult,
 };
 
@@ -93,27 +93,19 @@ fn parse_veach(i: &str) -> IResult<&str, &str> {
 }
 
 fn parse_vreference(i: &str) -> IResult<&str, (String, String)> {
-    ws(separated_list1(
-        char('.'),
-        take_while(|c: char| c != '.' && !c.is_whitespace()),
-    ))(i)
-    .and_then(|(i, vec)| {
-        let ref_type: String = vec
-            .get(0)
-            .ok_or_else(|| {
-                nom::Err::Failure(Error::new("Ups", nom::error::ErrorKind::LengthValue))
-            })?
-            .to_string();
+    let no_dot_or_whitespace = |c: char| c != '.' && !c.is_ascii_whitespace();
 
-        let ref_name: String = vec
-            .get(1)
-            .ok_or_else(|| {
-                nom::Err::Failure(Error::new("Ups", nom::error::ErrorKind::LengthValue))
-            })?
-            .to_string();
-
-        Ok((i, (ref_type, ref_name)))
-    })
+    map(
+        ws(tuple((
+            separated_pair(
+                take_while(no_dot_or_whitespace),
+                char('.'),
+                take_while(no_dot_or_whitespace),
+            ),
+            take_while(|c: char| !c.is_ascii_whitespace()),
+        ))),
+        |((res_type, res_name), _rest)| (res_type.to_string(), res_name.to_string()),
+    )(i)
 }
 
 fn parse_resource_property_value(i: &str) -> IResult<&str, ResourcePropertyValue> {
@@ -121,12 +113,12 @@ fn parse_resource_property_value(i: &str) -> IResult<&str, ResourcePropertyValue
         map(parse_vjson, ResourcePropertyValue::VJson),
         map(parse_vset, ResourcePropertyValue::VSet),
         map(parse_vstring, ResourcePropertyValue::VString),
-        map(parse_veach, |_| ResourcePropertyValue::VEach),
-        map(parse_vbool, ResourcePropertyValue::VBoolean),
-        map(parse_vnull, |_| ResourcePropertyValue::VNull),
         map(parse_vreference, |(res_type, res_name)| {
             ResourcePropertyValue::VReference { res_type, res_name }
         }),
+        map(parse_veach, |_| ResourcePropertyValue::VEach),
+        map(parse_vbool, ResourcePropertyValue::VBoolean),
+        map(parse_vnull, |_| ResourcePropertyValue::VNull),
     ))(i)
 }
 
